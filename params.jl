@@ -18,6 +18,16 @@ Dmin = 300; # g/L, made up minimum cell density
 # average carbon content of proteins
 Qcp = 0.5; # g carbon/g protein 
 
+
+# sugar matrix
+
+            #    ENDO IMPRT DEBR EXO 
+sugar_matrix = [-0.2    0    0    0  # extracellular polysaccharide ... eP
+                  1    -1    0    0  # extracellular oligosaccharide ... eO
+                  0     1   -1    0  # periplasmic oligosaccharide ... pO
+                  0     0    1  -0.2 # periplasmic debranched oligosaccharide pdbO
+                  0     0    1    1] # periplasmic sugars ... S_e
+
 # stoichiometry matrix
 
          # U  C  P  M
@@ -25,14 +35,37 @@ matrix = [ 1 -1  0  0   # intracellular substrate... S_c
            0  6 -1 -50   # cellular carbon... C_c
            0  0  1  0   # protein ... P_c
            0  0  0  1   # cell membrane ... lm
-          -1  0  0  0 ] # extracellular substrate... S_e
+          -1  0  0  0 ] # periplasmic sugars... S_e
 
 S_c_mw = 180.156 # g/mol, molecular weight of intracellular substrate
 C_c_mw = 12.0107 # g/mol, molecular weight of cellular carbon
+pO_mw = 6*180.156-5*18 # g/mol, molecular weight of periplasmic oligosaccharide
+pdbO_mw = 5*180.156-4*18 # g/mol, molecular weight of periplasmic debranched oligosaccharide
 
-# reaction rates
+# reaction rates CAZymes
+# extracellular endolaminarase GH16
+GH16_kcat = 10  # 1/s
+GH16_km = 0.001 # M
+GH16_mw = 50000 # g/mol
+
+# TBDT in outer membrane
+TBDT_kcat = 1000.0  # 1/s
+TBDT_km = 0.0001  # M
+TBDT_mw = 80500 # g/mol
+
+# periplasmic debranching laminarase GH30
+GH30_kcat = 40  # 1/s
+GH30_km = 0.020 # M
+GH30_mw = 65000 # g/mol
+
+# periplasmic exolaminarase GH17
+GH17_kcat = 200 # 1/s
+GH17_km = 0.001 # M
+GH17_mw = 38000 # g/mol
+
+# reaction rates core enyzmes
 # uptake
-UT_kcat = 100.0  # 1/s
+UT_kcat = 1000.0  # 1/s
 UT_km = 0.005  # M
 UT_mw = 115060 # g/mol
 
