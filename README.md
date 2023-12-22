@@ -7,4 +7,5 @@ include("constr.jl")
 include("optmsr.jl")
 in julia.
 
-![output_20231222_09](https://github.com/buckwiese/PUSPAM/assets/151577153/e18f3226-2cc5-46d6-b071-d0e28e25350d)
+![output_20231222_12](https://github.com/buckwiese/PUSPAM/assets/151577153/a98944b3-e375-4aab-8096-586593b5c34e)
+
