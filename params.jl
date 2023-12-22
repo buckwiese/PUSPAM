@@ -4,9 +4,9 @@ using JLD
 
 # cell parameters and limits
 # membrane parameters
-porin_pore=4*pi*(0.00055)^2 # μm2, pore area of porin
-sa_porin = sa_TBDT
+porin_pore=4*pi*(0.0055)^2 # μm2, pore area of porin REVIEW!
 sa_TBDT = 0.01*0.005 # μm2, specific surface area of TBDT molecules PDB 8AA2
+sa_porin = sa_TBDT
 sa_UT = 0.005*0.0025    # μm2, specific surface area of membrane transporter molecules PDB 2QVC
 sa_lm = 0.4e-6     # μm2, specific surface area of membrane lipid molecules
 
@@ -18,6 +18,9 @@ Av = 6.0221409e+23; #Avogadro's number (numbers/mole)
 Dmax = 340; # g/L (BioNumbers ID: 109049), maximum cell density 
 Dmin = 200; # g/L, made up minimum cell density
 
+DNA_mw = 650 # g/mol per basepair
+DNA_length = 2.5e6 # basepairs
+
 # average carbon content of proteins
 Qcp = 0.5; # g carbon/g protein 
 
@@ -26,42 +29,45 @@ DC_eP = 150 # μm^2/s, based on Elyakova et al. 1994
 DC_O = 300 # μm^2/s, made up
 DC_S = 600 # μm^2/s, BioNumbers
 
+# extracellular boundary layer thickness
+delta = 0.005 # μm, made up
 
-# sugar matrix
-
-            #    ENDO IMPRT DEBR EXO 
-sugar_matrix = [-0.2    0    0    0  # extracellular polysaccharide ... eP
-                  1    -1    0    0  # extracellular oligosaccharide ... eO
-                  0     1   -1    0  # periplasmic oligosaccharide ... pO
-                  0     0    1  -0.2 # periplasmic debranched oligosaccharide pdbO
-                  0     0    1    1] # periplasmic sugars ... S_e
 
 # stoichiometry matrix
 
-         # U  C  P  M
-matrix = [ 1 -1  0  0   # intracellular substrate... S_c
-           0  6 -1 -50   # cellular carbon... C_c
-           0  0  1  0   # protein ... P_c
-           0  0  0  1   # cell membrane ... lm
-          -1  0  0  0 ] # periplasmic sugars... S_e
+            #   ENDO IMPRT DEBR EXO   U    C    G    P    M    
+stoich_matrix = [-0.2  0    0    0    0    0    0    0    0       # extracellular polysaccharide ... eP
+                  1   -1    0    0    0    0    0    0    0       # extracellular oligosaccharide ... eO
+                  0    1   -1    0    0    0    0    0    0       # periplasmic oligosaccharide ... pO
+                  0    0    1  -0.2   0    0    0    0    0       # periplasmic debranched oligosaccharide pdbO
+                  0    0    1    1   -1    0    0    0    0       # periplasmic sugars ... S_e
+                  0    0    0    0    1   -1   -1    0    0       # intracellular substrate... S_c
+                  0    0    0    0    0    4    0   -1   -1       # cellular carbon... C_c
+                  0   -0.25 0    0   -2    7.2 30  -13   -4       # energy in ATP ... ATP (based on Su and refs therein, Rees et al. 2010 10.1038/nrm2646)
+                  0    0    0    0    0    0    0    1    0       # carbon atoms in proteins ... P_c
+                  0    0    0    0    0    0    0    0    0.1 ]  # membrane lipids ... lm
+
 
 S_c_mw = 180.156 # g/mol, molecular weight of intracellular substrate
 C_c_mw = 12.0107 # g/mol, molecular weight of cellular carbon
 eP_mw = 30 * 180.156 - 29 * 18 # g/mol, molecular weight of extracellular polysaccharide
 pO_mw = 6*180.156-5*18 # g/mol, molecular weight of periplasmic oligosaccharide
 pdbO_mw = 5*180.156-4*18 # g/mol, molecular weight of periplasmic debranched oligosaccharide
-porin_mw = 1.5*TBDT_mw
+ATP_mw = 507.181 # g/mol, molecular weight of ATP
+
 
 # reaction rates CAZymes
 # extracellular endolaminarase GH16
-GH16_kcat = 50  # 1/s
-GH16_km = 0.01 # M
+GH16_kcat = 30  # 1/s
+GH16_km = 0.0008/30 # M
 GH16_mw = 30000 # g/mol
 
 # TBDT in outer membrane
-TBDT_kcat = 0.1 # 1/s
-TBDT_km = 0.0000015  # M, Balhesteros et al. 2017 https://doi.org/10.1128/jb.00723-16
+TBDT_kcat = 1 # 1/s
+TBDT_km = 0.0008  # M, Balhesteros et al. 2017 https://doi.org/10.1128/jb.00723-16
 TBDT_mw = 190000 # g/mol, Silale and Van den Berg 2023 10.1146/annurev-micro-032421-111116 and Sverzhinsky et al. 2015 https://doi.org/10.1128%2FJB.00069-15 (Chimento et al. 2003 https://doi.org/10.1038/nsb914)
+
+porin_mw = 1.5*TBDT_mw
 
 # periplasmic debranching laminarase GH30
 GH30_kcat = 50  # 1/s
@@ -86,12 +92,12 @@ C_mw = 4400000 # g/mol, adapted from Norris et al
 
 # protein synthesis
 P_kcat = 15.0  # 1/s, adapted from Norris et al
-P_km = 0.3 # M, ?! adapted from Norris et al
+P_km = 0.1 # M, ?! adapted from Norris et al
 P_mw = 2200000 # g/mol
 
 # membrane synthesis
-M_kcat = 3.0  # 1/s, adapted from Norris et al 
-M_km = 0.02 # M, ?! adapted from Norris et al
+M_kcat = 150.0  # 1/s, adapted from Norris et al 
+M_km = 0.004 # M, ?! adapted from Norris et al
 M_mw = 2310000 # g/mol, adapted from Norris et al
 
 

@@ -10,7 +10,7 @@ using StatsBase
 
 # Read the results from the CSV file
 df = CSV.read(file_name, DataFrame)
-#df = filter(row -> row[:optmsr_response] == "LOCALLY_SOLVED", df)
+#df = filter(row -> row[:optmsr_response] in ["LOCALLY_SOLVED", "ALMOST_LOCALLY_SOLVED"], df)
 
 # Extract the p values and final growth rates
 p_values = df[:, "eP"]
@@ -23,17 +23,18 @@ df[!, :log_eP] = log10.(df[!, :eP])
 my_palette = palette(:Set3_11)
 
 # Plot the growth rate over the environmental concentrations with loess approximation
-yticks = 0:1:5
+yticks = 0.0:0.1:0.6
 Fig_growth_rate = scatter(df.log_eP, df.mu_per_hour, color = my_palette[1],
-    xlabel = "", ylabel = "growth rate (1/h)", yticks = yticks, ylims = (0, 5),
+    xlabel = "", ylabel = "growth rate (1/h)", yticks = yticks, ylims = (0, 0),
     legend = :outerright,
     label = "microbial cell divisions per hour")
 lo_gr=loess(df.log_eP, df.mu_per_hour)
 range_all=range(minimum(df.log_eP), maximum(df.log_eP))
 pred_lo_gr=predict(lo_gr, range_all)
 plot!(Fig_growth_rate, range_all, pred_lo_gr, line = my_palette[1], label = "loess approximation")
-vline!(Fig_growth_rate, [log10.(1.5e-6)], linestyle=:dot, linecolor=:grey, label="")
 
+# Add a circle representing r_cy = 0.2
+scatter!(df.log_eP, df.mu_per_hour .+ 0.2, color = :red, markersize = 50*df.r_cyt, label = "cytoplasm with periplasm", markerstrokewidth = df.r_pp*50)
 
 # Plot the core proteome fractions over the environmental concentrations with loess approximation
 Fig_core_phis = scatter(df.log_eP, df.phi_C, color = my_palette[2],
@@ -54,7 +55,7 @@ scatter!(df.log_eP, df.phi_UT, color = my_palette[5], label = "inner membrane tr
 lo_phi_UT=loess(df.log_eP, df.phi_UT)
 pred_lo_phi_UT=predict(lo_phi_UT, range_all)
 plot!(Fig_core_phis, range_all, pred_lo_phi_UT, line = my_palette[5], label = "")
-vline!(Fig_core_phis, [log10.(1.5e-6)], linestyle=:dot, linecolor=:grey, label="")
+#vline!(Fig_core_phis, [log10.(2e-6)], linestyle=:dot, linecolor=:grey, label="")
 
 # Plot the CAZyme proteome fractions over the environmental concentrations with loess approximation
 Fig_CAZY_phis = scatter(df.log_eP, df.phi_GH16, color = my_palette[6],
@@ -79,11 +80,11 @@ scatter!(df.log_eP, df.phi_porin, color = my_palette[10], label = "outer membran
 lo_phi_porin=loess(df.log_eP, df.phi_porin)
 pred_lo_phi_porin=predict(lo_phi_porin, range_all)
 plot!(Fig_CAZY_phis, range_all, pred_lo_phi_porin, line = my_palette[10], label = "")
-vline!(Fig_CAZY_phis, [log10.(1.5e-6)], linestyle=:dot, linecolor=:grey, label="")
+#vline!(Fig_CAZY_phis, [log10.(2e-6)], linestyle=:dot, linecolor=:grey, label="")
 
 # Display all plots together
 Figures_PAM = plot(Fig_growth_rate, Fig_core_phis, Fig_CAZY_phis,
     layout = (3, 1), size = (800, 600))
 
 # Save to file
-savefig(Figures_PAM, "output_plot_$(datetime_str).png")
+savefig(Figures_PAM, "output_$(datetime_str).png")
