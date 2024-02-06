@@ -2,6 +2,8 @@
 
 using JLD
 
+#Random.seed!(20)  # Set a random seed for reproducibility
+
 # cell parameters and limits
 # membrane parameters
 sa_TBDT = 0.01*0.005 # μm2, specific surface area of TBDT molecules PDB 8AA2
@@ -68,13 +70,13 @@ cU_max = 2e7 # numbers, maximum periplasmic uronate concentration
 pGlc_min = 0 # numbers, minimum periplasmic glucose concentration
 pGlc_max = 2e7 # numbers, maximum periplasmic glucose concentration
 cGlc_min = 0 # numbers, minimum intracellular glucose concentration
-cGlc_max = 0.01 * 1e-15 * Av # numbers, maximum intracellular glucose concentration: ~10 mM (BioNumbers ID: 104695) * 1 μm^3 max cytoplasm volume
+cGlc_max = 2* 0.01 * 1e-15 * Av # numbers, maximum intracellular glucose concentration: ~10 mM (BioNumbers ID: 104695) * 1 μm^3 max cytoplasm volume # MAY BE TOO LOW
 cPyr_min = 0 # numbers, minimum intracellular pyruvate concentration
-cPyr_max = 0.03 * 1e-15 * Av # numbers, maximum intracellular pyruvate concentration: ~30 mM * 1 μm^3 max cytoplasm volume
+cPyr_max = 0.05 * 1e-15 * Av # numbers, maximum intracellular pyruvate concentration: ~50 mM * 1 μm^3 max cytoplasm volume
 cC_min = 0 # numbers, minimum intracellular carbon concentration
 cC_max = 0.3 * 3 * 1e-15 * Av # numbers, maximum intracellular carbon concentration: ~300 mM (BioNumbers ID: 104678) * 1 μm^3 max cytoplasm volume, assuing 3 carbon per molecule
 cP_min = 0 # numbers, minimum intracellular protein concentration
-cP_max = 500 * Qcp / cC_mw * 1e-15 * Av # 500 mg / mL volume of cytoplasm (BioNumbers ID: 115317) 
+cP_max = 2*500 * Qcp / cC_mw * 1e-15 * Av # 500 mg / mL volume of cytoplasm (BioNumbers ID: 115317) MAY BE TOO LOW
 lm_min = 0 # numbers, minimum membrane lipid concentration
 lm_max = 2*(4 * pi * (1)^2) / sa_lm # numbers, maximum membrane lipid concentration: 2 monolayers of 1 μm radius composed of only lipids
 
@@ -104,47 +106,94 @@ stoich_matrix = [-0.2     0       0        0       0       0       0       0    
 
 
 # reaction rates CAZymes
+# based on normal distributions for endo and exo enzymes
+
+mean_log_kM_endo = -6.48 # M, mean kM for endo enzymes
+sd_log_kM_endo = 2       # M, standard deviation kM for endo enzymes, times unexplained variance
+sd_log_kcat_endo_kMdpdnt = 1.19 # 1/s, standard deviation kcat for endo enzymes, kM dependent
+
+mean_log_kcat_exo = 3.75 # 1/s, mean kcat for exo enzymes
+sd_log_kcat_exo = 1.28 # 1/s, standard deviation kcat for exo enzymes
+mean_log_kM_exo = -6.39 # M, mean kM for exo enzymes
+sd_log_kM_exo = 1.66 # M, standard deviation kM for exo enzymes
+
 # laminarin cascade
-# extracellular endolaminarase GH16
-GH16_kcat = 300  # 1/s
-GH16_km = 0.014/30 # M
-GH16_mw = 30000 # g/mol
+# extracellular endolaminarases GH16
+#GH16A_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+#GH16A_kcat = exp(log(GH16A_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+#GH16A_mw = 30000 # g/mol
+#GH16B_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+#GH16B_kcat = exp(log(GH16B_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+#GH16B_mw = 30000 # g/mol
+#GH16C_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+#GH16C_kcat = exp(log(GH16C_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+#GH16C_mw = 30000 # g/mol
 
-# periplasmic debranching laminarase GH30
-GH30_kcat = 66  # 1/s
-GH30_km = 0.560/6 # M
-GH30_mw = 55000 # g/mol
+# periplasmic debranching laminarases GH30
+GH30A_kcat = exp(mean_log_kcat_exo + sd_log_kcat_exo * randn())  # 1/s
+GH30A_km = exp(mean_log_kM_exo + sd_log_kM_exo * randn()) # M, devide by DP of substrate to relate to monomer
+GH30A_mw = 55000 # g/mol
+GH30B_kcat = exp(mean_log_kcat_exo + sd_log_kcat_exo * randn())  # 1/s
+GH30B_km = exp(mean_log_kM_exo + sd_log_kM_exo * randn()) # M, devide by DP of substrate to relate to monomer
+GH30B_mw = 55000 # g/mol
 
-# periplasmic exolaminarase GH17
-GH17_kcat = 80 # 1/s
-GH17_km = 0.003 # M
-GH17_mw = 90000 # g/mol
+# periplasmic exolaminarases GH17
+GH17A_kcat = exp(mean_log_kcat_exo + sd_log_kcat_exo * randn())  # 1/s
+GH17A_km = exp(mean_log_kM_exo + sd_log_kM_exo * randn()) # M, devide by DP of substrate to relate to monomer
+GH17A_mw = 90000 # g/mol
+GH17B_kcat = exp(mean_log_kcat_exo + sd_log_kcat_exo * randn())  # 1/s
+GH17B_km = exp(mean_log_kM_exo + sd_log_kM_exo * randn()) # M, devide by DP of substrate to relate to monomer
+GH17B_mw = 90000 # g/mol
 
 # alginate cascade
-# extracellular sentinel endo-alginate lyase PL7
-PL7_kcat = 10  # 1/s
-PL7_km = 0.001/100 # M
-PL7_mw = 40000 # g/mol
+# extracellular sentinel endo-alginate lyases PL7
+#PL7A_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+#PL7A_kcat = exp(log(PL7A_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+#PL7A_mw = 40000 # g/mol
+#PL7B_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+#PL7B_kcat = exp(log(PL7B_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+#PL7B_mw = 40000 # g/mol
+#PL7C_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+#PL7C_kcat = exp(log(PL7C_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+#PL7C_mw = 40000 # g/mol
 
-# extracellular M-specific endo-alginate lyase PL5
-PL5_kcat = 0.8  # 1/s
-PL5_km = 0.0002/100 # M
-PL5_mw = 35000 # g/mol
+# extracellular M-specific endo-alginate lyases PL5
+PL5A_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+PL5A_kcat = exp(log(PL5A_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+PL5A_mw = 35000 # g/mol
+PL5B_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+PL5B_kcat = exp(log(PL5B_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+PL5B_mw = 35000 # g/mol
+PL5C_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+PL5C_kcat = exp(log(PL5C_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+PL5C_mw = 35000 # g/mol
 
-# extracellular G-specific endo-alginate lyase PL38
-PL38_kcat = 9.1  # 1/s
-PL38_km = 0.0023/100 # M
-PL38_mw = 46000 # g/mol
+# extracellular G-specific endo-alginate lyases PL38
+PL38A_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+PL38A_kcat = exp(log(PL38A_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+PL38A_mw = 46000 # g/mol
+PL38B_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+PL38B_kcat = exp(log(PL38B_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+PL38B_mw = 46000 # g/mol
+PL38C_km = exp(mean_log_kM_endo + sd_log_kM_endo * randn()) # M, devide by DP of substrate to relate to monomer
+PL38C_kcat = exp(log(PL38C_km) * 0.5 + 5.8 + sd_log_kcat_endo_kMdpdnt * randn())  # 1/s
+PL38C_mw = 46000 # g/mol
 
-# periplasmic M-specific exo-alginate lyase PL17
-PL17_kcat = 130 # 1/s
-PL17_km = 0.0027/5 # M
-PL17_mw = 80500 # g/mol
+# periplasmic M-specific exo-alginate lyases PL17
+PL17A_kcat = exp(mean_log_kcat_exo + sd_log_kcat_exo * randn())  # 1/s
+PL17A_km = exp(mean_log_kM_exo + sd_log_kM_exo * randn()) # M, devide by DP of substrate to relate to monomer
+PL17A_mw = 80500 # g/mol
+PL17B_kcat = exp(mean_log_kcat_exo + sd_log_kcat_exo * randn())  # 1/s
+PL17B_km = exp(mean_log_kM_exo + sd_log_kM_exo * randn()) # M, devide by DP of substrate to relate to monomer
+PL17B_mw = 80500 # g/mol
 
 # periplasmic G-specific exo-alginate lyase PL6
-PL6_kcat = 40 # 1/s
-PL6_km = 0.002/5 # M
-PL6_mw = 85200 # g/mol
+PL6A_kcat = exp(mean_log_kcat_exo + sd_log_kcat_exo * randn())  # 1/s
+PL6A_km = exp(mean_log_kM_exo + sd_log_kM_exo * randn()) # M, devide by DP of substrate to relate to monomer
+PL6A_mw = 85200 # g/mol
+PL6B_kcat = exp(mean_log_kcat_exo + sd_log_kcat_exo * randn())  # 1/s
+PL6B_km = exp(mean_log_kM_exo + sd_log_kM_exo * randn()) # M, devide by DP of substrate to relate to monomer
+PL6B_mw = 85200 # g/mol
 
 # reaction rates core enyzmes
 # TBDT in outer membrane (oligosaccharide uptake)
